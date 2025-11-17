@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Chaos Carver</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chaos Carver - 10 Hands Test</title>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/GLTFLoader.js"></script>
   <style>
     body {margin:0;background:#000;overflow:hidden;font-family:monospace;color:#ff0044;}
     #ui{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;}
-    button{font-size:50px;padding:20px;background:#300;border:3px solid #600;color:#f66;}
+    button{font-size:40px;padding:15px;background:#300;border:3px solid #600;color:#f66;}
+    .hand-container {position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:10px;font-size:20px;}
+    .hand-label {color:#ff0044;}
   </style>
 </head>
 <body>
   <div id="ui">
     <button>HOLD TO CARVE</button>
   </div>
+  <div class="hand-container" id="handLabels"></div>
 
   <script type="module">
     const scene = new THREE.Scene();
@@ -27,22 +32,48 @@
     const light = new THREE.HemisphereLight(0xff0044, 0x440044, 1.5);
     scene.add(light);
 
+    const handUrls = [
+      'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb', // 1
+      'https://media.sketchfab.com/models/eae97cc2a742413cb5338ab942b12c1e/production/files/hand.glb', // 2
+      'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF-Binary/BrainStem.glb', // 3
+      'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/PrimaryIonDrive.glb', // 4
+      'https://media.sketchfab.com/models/a348cf6087eb4fd98a83b026593823ad/production/files/hand_rig.glb', // 5
+      'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb', // 6
+      'https://media.sketchfab.com/models/68ccd763ea92415e88c51336b9295f0f/production/files/hand.glb', // 7
+      'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb', // 8
+      'https://raw.githubusercontent.com/cx20/gltf-test/master/tutorialModels/HandRigging/glTF/HandRigging.gltf', // 9
+      'https://raw.githubusercontent.com/baronwatts/models/master/hands.glb' // 10
+    ];
+
+    const handLabels = document.getElementById('handLabels');
     const loader = new GLTFLoader();
-    loader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb', gltf => {
-      const hand = gltf.scene;
-      hand.scale.set(1.3,1.3,1.3);
-      hand.position.set(0,0.1,0.5);
-      hand.rotation.set(-0.7,0,0);
-      hand.traverse(n => {
-        if (n.isMesh) {
-          n.material.color.set(0xff0044);
-          n.material.metalness = 0.9;
-          n.material.roughness = 0.1;
-          n.material.emissive = new THREE.Color(0xff0044);
-          n.material.emissiveIntensity = 2;
-        }
+
+    handUrls.forEach((url, index) => {
+      const label = document.createElement('div');
+      label.className = 'hand-label';
+      label.textContent = `Hand ${index + 1} loading...`;
+      handLabels.appendChild(label);
+
+      loader.load(url, gltf => {
+        const hand = gltf.scene;
+        hand.scale.set(1.2, 1.2, 1.2);
+        hand.position.set((index - 4.5) * 0.8, 0.1, 0.5);
+        hand.rotation.set(-0.7, 0, 0);
+        hand.traverse(n => {
+          if (n.isMesh) {
+            n.material.color.set(0xff0044);
+            n.material.metalness = 0.9;
+            n.material.roughness = 0.1;
+            n.material.emissive = new THREE.Color(0xff0044);
+            n.material.emissiveIntensity = 2;
+          }
+        });
+        scene.add(hand);
+        label.textContent = `Hand ${index + 1} LOADED`;
+      }, undefined, err => {
+        label.textContent = `Hand ${index + 1} FAILED`;
+        console.error(`Hand ${index + 1} failed:`, err);
       });
-      scene.add(hand);
     });
 
     function animate() {
